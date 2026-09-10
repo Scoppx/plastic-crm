@@ -95,9 +95,9 @@ Per ogni paziente:
      trattamento e calcolo `visit.date + recallDays`. Candidato = il più vicino nel tempo.
    - Se nessun candidato (solo trattamenti senza richiamo), fallback:
      `lastVisit.date + globalDormantDays`.
-   - Se una visita di qualsiasi tipo è successiva al `dueDate` calcolato, il paziente
-     è tornato: si riparte dall'ultima visita con la stessa logica (in pratica, si
-     considera solo l'ultima visita per trattamento, quindi il caso è coperto).
+   - Si considera sempre e solo l'ultima visita per trattamento: se il paziente è
+     tornato per un altro trattamento, quel trattamento ha il suo ciclo e l'altro
+     resta com'è. Nel fallback conta l'ultima visita in assoluto.
 4. Esclusioni post-calcolo:
    - `snoozeUntil > today` su qualunque `ContactAttempt` del paziente: escluso.
    - Esiste un `ContactAttempt` con `date >= dueDate - recallWindowDays`: escluso
