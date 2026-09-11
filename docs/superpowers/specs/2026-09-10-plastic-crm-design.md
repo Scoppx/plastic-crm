@@ -100,8 +100,9 @@ Per ogni paziente:
      resta com'è. Nel fallback conta l'ultima visita in assoluto.
 4. Esclusioni post-calcolo:
    - `snoozeUntil > today` su qualunque `ContactAttempt` del paziente: escluso.
-   - Esiste un `ContactAttempt` con `date >= dueDate - recallWindowDays`: escluso
-     (già contattato per questo ciclo).
+   - Esiste un `ContactAttempt` senza `snoozeUntil` con `date >= dueDate - recallWindowDays`:
+     escluso (già contattato per questo ciclo). I contatti di tipo "rimanda" non contano
+     come contatto: scaduto lo snooze il paziente torna in lista.
 5. Stato:
    - `overdue` se `dueDate < today`
    - `due` se `today <= dueDate <= today + recallWindowDays`
