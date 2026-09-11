@@ -82,13 +82,13 @@ export default function ContactDrawer({ recall, onClose }: { recall: Recall; onC
             <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} className="w-full rounded border px-2 py-1 text-sm" />
             <div className="flex flex-wrap gap-2">
               {channel === 'whatsapp' && (
-                <a href={waHref} target="_blank" rel="noreferrer" aria-disabled={!p.phone}
+                <a href={p.phone ? waHref : undefined} target="_blank" rel="noreferrer" aria-disabled={!p.phone} tabIndex={p.phone ? undefined : -1}
                   className={`rounded px-3 py-1 text-sm text-white ${p.phone ? 'bg-green-600 hover:bg-green-700' : 'pointer-events-none bg-slate-300'}`}>
                   Apri WhatsApp
                 </a>
               )}
               {channel === 'email' && (
-                <a href={mailHref} aria-disabled={!p.email}
+                <a href={p.email ? mailHref : undefined} aria-disabled={!p.email} tabIndex={p.email ? undefined : -1}
                   className={`rounded px-3 py-1 text-sm text-white ${p.email ? 'bg-blue-600 hover:bg-blue-700' : 'pointer-events-none bg-slate-300'}`}>
                   Apri email
                 </a>
