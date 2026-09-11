@@ -39,7 +39,11 @@ export default function PatientDetail() {
       {editing && (
         <PatientForm
           initial={p}
-          onSubmit={(np) => { dispatch({ type: 'UPDATE_PATIENT', id: p.id, changes: np }); setEditing(false); }}
+          onSubmit={(np) => {
+            const { firstName, lastName, phone, email, birthDate, notes } = np;
+            dispatch({ type: 'UPDATE_PATIENT', id: p.id, changes: { firstName, lastName, phone, email, birthDate, notes } });
+            setEditing(false);
+          }}
           onCancel={() => setEditing(false)}
         />
       )}
@@ -51,12 +55,14 @@ export default function PatientDetail() {
             <input type="checkbox" checked={p.doNotContact} onChange={(e) => dispatch({ type: 'UPDATE_PATIENT', id: p.id, changes: { doNotContact: e.target.checked } })} />
             Non contattare
           </label>
-          <textarea
-            value={p.notes}
-            onChange={(e) => dispatch({ type: 'UPDATE_PATIENT', id: p.id, changes: { notes: e.target.value } })}
-            placeholder="Note"
-            className="w-full rounded border px-2 py-1"
-          />
+          {!editing && (
+            <textarea
+              value={p.notes}
+              onChange={(e) => dispatch({ type: 'UPDATE_PATIENT', id: p.id, changes: { notes: e.target.value } })}
+              placeholder="Note"
+              className="w-full rounded border px-2 py-1"
+            />
+          )}
         </div>
         <div className="rounded-lg border bg-white p-4 text-sm">
           <div className="text-xs uppercase text-slate-500">Prossimo richiamo</div>
