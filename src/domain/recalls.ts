@@ -50,7 +50,7 @@ export function computeRecalls(state: AppState, today: string): Recall[] {
     const contacts = state.contacts.filter((c) => c.patientId === p.id);
     if (contacts.some((c) => c.snoozeUntil && c.snoozeUntil > today)) continue;
     const cycleStart = addDaysISO(due.dueDate, -window);
-    if (contacts.some((c) => c.date >= cycleStart)) continue;
+    if (contacts.some((c) => !c.snoozeUntil && c.date >= cycleStart)) continue;
 
     const daysOverdue = daysBetween(due.dueDate, today);
     out.push({

@@ -72,9 +72,20 @@ describe('computeRecalls', () => {
     const s = state({
       patients: [patient('a'), patient('b')],
       visits: [visit('a', BOTOX.id, '2026-01-01'), visit('b', BOTOX.id, '2026-01-01')],
-      contacts: [contact('a', '2026-05-01', '2026-10-01'), contact('b', '2026-04-01', '2026-05-01')],
+      contacts: [contact('a', '2026-05-01', '2026-10-01'), contact('b', '2026-04-20', '2026-05-20')],
     });
     expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['b']);
+  });
+
+  it('a new visit after a contact starts a new cycle', () => {
+    // contact on 2026-04-20 for the cycle due 2026-05-01; then a new Botox visit 2026-05-10 → due 2026-09-07, overdue by 4 days
+    const s = state({
+      patients: [patient('a')],
+      visits: [visit('a', BOTOX.id, '2026-01-01'), visit('a', BOTOX.id, '2026-05-10')],
+      contacts: [contact('a', '2026-04-20')],
+    });
+    const r = computeRecalls(s, TODAY);
+    expect(r.map((x) => [x.patient.id, x.status, x.daysOverdue])).toEqual([['a', 'overdue', 4]]);
   });
 
   it('excludes patient contacted within the current cycle window', () => {
