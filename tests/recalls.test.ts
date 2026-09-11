@@ -19,7 +19,6 @@ describe('computeDueDate', () => {
     expect(d.dueDate).toBe('2026-08-29'); // 2026-05-01 + 120
     expect(d.treatment?.id).toBe(BOTOX.id);
     expect(d.lastVisitDate).toBe('2026-05-01');
-    expect(d.estimatedValue).toBe(350);
   });
 
   it('picks the nearest due date across treatments', () => {
@@ -34,12 +33,11 @@ describe('computeDueDate', () => {
   it('falls back to globalDormantDays when only null-recall treatments', () => {
     const s = state({
       patients: [patient('a')],
-      visits: [visit('a', RINO.id, '2026-01-10', 6500)],
+      visits: [visit('a', RINO.id, '2026-01-10')],
     });
     const d = computeDueDate('a', s)!;
     expect(d.dueDate).toBe('2026-07-09'); // +180
     expect(d.treatment).toBeNull();
-    expect(d.estimatedValue).toBe(6500); // last visit price
   });
 });
 
@@ -111,12 +109,12 @@ describe('computeRecalls', () => {
     expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['o-older', 'o43', 'o42', 'd1']);
   });
 
-  it('breaks ties on estimatedValue desc', () => {
+  it('breaks ties on daysOverdue by lastName', () => {
     const s = state({
       treatments: [RINO],
-      patients: [patient('cheap'), patient('rich')],
-      visits: [visit('cheap', RINO.id, '2026-01-10', 100), visit('rich', RINO.id, '2026-01-10', 9000)],
+      patients: [patient('z', { lastName: 'Zeta' }), patient('a', { lastName: 'Alfa' })],
+      visits: [visit('z', RINO.id, '2026-01-10'), visit('a', RINO.id, '2026-01-10')],
     });
-    expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['rich', 'cheap']);
+    expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['a', 'z']);
   });
 });

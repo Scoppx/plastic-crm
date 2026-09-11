@@ -13,14 +13,14 @@ function mulberry32(seed: number) {
 }
 
 const TREATMENTS: Treatment[] = [
-  { id: 't-botox', name: 'Botox', recallDays: 120, price: 350 },
-  { id: 't-filler-labbra', name: 'Filler labbra', recallDays: 270, price: 450 },
-  { id: 't-filler-zigomi', name: 'Filler zigomi', recallDays: 365, price: 600 },
-  { id: 't-biorivit', name: 'Biorivitalizzazione', recallDays: 180, price: 250 },
-  { id: 't-peeling', name: 'Peeling', recallDays: 90, price: 150 },
-  { id: 't-rino', name: 'Rinoplastica', recallDays: null, price: 6500 },
-  { id: 't-masto', name: 'Mastoplastica', recallDays: null, price: 7500 },
-  { id: 't-blefaro', name: 'Blefaroplastica', recallDays: null, price: 4000 },
+  { id: 't-botox', name: 'Botox', recallDays: 120 },
+  { id: 't-filler-labbra', name: 'Filler labbra', recallDays: 270 },
+  { id: 't-filler-zigomi', name: 'Filler zigomi', recallDays: 365 },
+  { id: 't-biorivit', name: 'Biorivitalizzazione', recallDays: 180 },
+  { id: 't-peeling', name: 'Peeling', recallDays: 90 },
+  { id: 't-rino', name: 'Rinoplastica', recallDays: null },
+  { id: 't-masto', name: 'Mastoplastica', recallDays: null },
+  { id: 't-blefaro', name: 'Blefaroplastica', recallDays: null },
 ];
 
 const FIRST = ['Giulia', 'Francesca', 'Chiara', 'Sara', 'Valentina', 'Elena', 'Martina', 'Alessia', 'Federica', 'Laura',
@@ -85,7 +85,6 @@ export function createSeed(today: string): AppState {
         patientId: id,
         treatmentId,
         date,
-        price: t.price,
         notes: '',
       });
       const gap = t.recallDays ? int(Math.round(t.recallDays * 0.8), Math.round(t.recallDays * 1.3)) : int(120, 300);

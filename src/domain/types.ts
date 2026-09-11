@@ -2,7 +2,6 @@ export type Treatment = {
   id: string;
   name: string;
   recallDays: number | null;
-  price: number;
 };
 
 export type Patient = {
@@ -23,7 +22,6 @@ export type Visit = {
   patientId: string;
   treatmentId: string;
   date: string;
-  price: number;
   notes: string;
 };
 
@@ -64,7 +62,6 @@ export type DueInfo = {
   treatment: Treatment | null;
   lastVisitDate: string;
   dueDate: string;
-  estimatedValue: number;
 };
 
 export type Recall = DueInfo & {
@@ -73,7 +70,7 @@ export type Recall = DueInfo & {
   status: RecallStatus;
 };
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_SETTINGS: Settings = {
   clinicName: 'Studio Demo',

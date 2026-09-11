@@ -9,7 +9,8 @@ export type Stats = {
   doNotContact: number;
   recallsByMonth: { month: string; count: number }[];
   recoveryRate: number | null;
-  valueByTreatment: { name: string; value: number }[];
+  recallsByTreatment: { name: string; count: number }[];
+  contactedLast30Days: number;
 };
 
 function lastSixMonths(today: string): string[] {
@@ -46,11 +47,16 @@ export function computeStats(state: AppState, today: string): Stats {
     if (state.visits.some((v) => v.patientId === c.patientId && v.date > c.date && v.date <= limit)) recovered++;
   }
 
-  const valueMap = new Map<string, number>();
+  const treatmentCounts = new Map<string, number>();
   for (const r of recalls) {
-    const name = r.treatment ? r.treatment.name : 'Altro';
-    valueMap.set(name, (valueMap.get(name) ?? 0) + r.estimatedValue);
+    const name = r.treatment?.name ?? 'Controllo generale';
+    treatmentCounts.set(name, (treatmentCounts.get(name) ?? 0) + 1);
   }
+
+  const since30 = addDaysISO(today, -30);
+  const contactedLast30Days = state.contacts.filter(
+    (c) => !c.snoozeUntil && c.date > since30 && c.date <= today,
+  ).length;
 
   return {
     totalPatients: state.patients.length,
@@ -59,8 +65,9 @@ export function computeStats(state: AppState, today: string): Stats {
     doNotContact: state.patients.filter((p) => p.doNotContact).length,
     recallsByMonth: months.map((m) => ({ month: m, count: counts.get(m)! })),
     recoveryRate: realContacts.length === 0 ? null : recovered / realContacts.length,
-    valueByTreatment: [...valueMap.entries()]
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value),
+    recallsByTreatment: [...treatmentCounts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
+    contactedLast30Days,
   };
 }

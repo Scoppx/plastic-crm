@@ -10,7 +10,7 @@ export default function Settings() {
   const s = state.settings;
   const [confirmReset, setConfirmReset] = useState(false);
   const [importError, setImportError] = useState('');
-  const [newT, setNewT] = useState({ name: '', recallDays: '', price: '' });
+  const [newT, setNewT] = useState({ name: '', recallDays: '' });
 
   const num = (v: string) => (v === '' ? null : Number(v));
   const usedTreatment = (id: string) => state.visits.some((v) => v.treatmentId === id);
@@ -72,14 +72,13 @@ export default function Settings() {
         <h2 className="font-semibold">Trattamenti</h2>
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase text-slate-500">
-            <tr><th>Nome</th><th>Richiamo (gg)</th><th>Prezzo €</th><th></th></tr>
+            <tr><th>Nome</th><th>Richiamo (gg)</th><th></th></tr>
           </thead>
           <tbody>
             {state.treatments.map((t) => (
               <tr key={t.id} className="border-t">
                 <td className="py-1 pr-2"><input value={t.name} onChange={(e) => dispatch({ type: 'UPDATE_TREATMENT', id: t.id, changes: { name: e.target.value } })} className={field} /></td>
                 <td className="py-1 pr-2"><input type="number" value={t.recallDays ?? ''} placeholder="nessuno" onChange={(e) => dispatch({ type: 'UPDATE_TREATMENT', id: t.id, changes: { recallDays: num(e.target.value) } })} className={field} /></td>
-                <td className="py-1 pr-2"><input type="number" value={t.price} onChange={(e) => dispatch({ type: 'UPDATE_TREATMENT', id: t.id, changes: { price: Number(e.target.value) } })} className={field} /></td>
                 <td className="py-1">
                   <button
                     disabled={usedTreatment(t.id)}
@@ -93,13 +92,12 @@ export default function Settings() {
             <tr className="border-t">
               <td className="py-1 pr-2"><input value={newT.name} onChange={(e) => setNewT({ ...newT, name: e.target.value })} placeholder="Nuovo trattamento" className={field} /></td>
               <td className="py-1 pr-2"><input type="number" value={newT.recallDays} onChange={(e) => setNewT({ ...newT, recallDays: e.target.value })} placeholder="nessuno" className={field} /></td>
-              <td className="py-1 pr-2"><input type="number" value={newT.price} onChange={(e) => setNewT({ ...newT, price: e.target.value })} className={field} /></td>
               <td className="py-1">
                 <button
                   onClick={() => {
                     if (!newT.name) return;
-                    dispatch({ type: 'ADD_TREATMENT', treatment: { id: newId(), name: newT.name, recallDays: num(newT.recallDays), price: Number(newT.price) || 0 } });
-                    setNewT({ name: '', recallDays: '', price: '' });
+                    dispatch({ type: 'ADD_TREATMENT', treatment: { id: newId(), name: newT.name, recallDays: num(newT.recallDays) } });
+                    setNewT({ name: '', recallDays: '' });
                   }}
                   className="text-xs text-indigo-600"
                 >aggiungi</button>

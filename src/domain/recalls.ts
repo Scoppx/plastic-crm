@@ -22,7 +22,7 @@ export function computeDueDate(patientId: string, state: AppState): DueInfo | nu
     if (!t || t.recallDays === null) continue;
     const dueDate = addDaysISO(v.date, t.recallDays);
     if (!best || dueDate < best.dueDate) {
-      best = { treatment: t, lastVisitDate: v.date, dueDate, estimatedValue: t.price };
+      best = { treatment: t, lastVisitDate: v.date, dueDate };
     }
   }
   if (best) return best;
@@ -32,7 +32,6 @@ export function computeDueDate(patientId: string, state: AppState): DueInfo | nu
     treatment: null,
     lastVisitDate: last.date,
     dueDate: addDaysISO(last.date, state.settings.globalDormantDays),
-    estimatedValue: last.price,
   };
 }
 
@@ -64,6 +63,8 @@ export function computeRecalls(state: AppState, today: string): Recall[] {
   return out.sort((a, b) => {
     if (a.status !== b.status) return a.status === 'overdue' ? -1 : 1;
     if (a.daysOverdue !== b.daysOverdue) return b.daysOverdue - a.daysOverdue;
-    return b.estimatedValue - a.estimatedValue;
+    const lastName = a.patient.lastName.localeCompare(b.patient.lastName);
+    if (lastName !== 0) return lastName;
+    return a.patient.firstName.localeCompare(b.patient.firstName);
   });
 }

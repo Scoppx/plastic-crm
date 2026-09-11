@@ -3,7 +3,6 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { useApp, useToday } from '../store/AppContext';
 import { computeStats } from '../domain/stats';
 import KpiCard from '../components/KpiCard';
-import { eur } from '../components/RecallTable';
 
 export default function Stats() {
   const { state } = useApp();
@@ -34,14 +33,14 @@ export default function Stats() {
           </ResponsiveContainer>
         </div>
         <div className="rounded-lg border bg-white p-4">
-          <h2 className="mb-2 font-semibold">Valore recuperabile per trattamento</h2>
+          <h2 className="mb-2 font-semibold">Dormienti e in scadenza per trattamento</h2>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={s.valueByTreatment} layout="vertical" margin={{ left: 40 }}>
+            <BarChart data={s.recallsByTreatment} layout="vertical" margin={{ left: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis type="number" tickFormatter={(v) => eur(v)} tick={{ fontSize: 12 }} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
               <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(v) => eur(Number(v))} />
-              <Bar dataKey="value" name="Valore" fill="#0ea5e9" radius={[0, 4, 4, 0]} />
+              <Tooltip />
+              <Bar dataKey="count" name="Pazienti" fill="#0ea5e9" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

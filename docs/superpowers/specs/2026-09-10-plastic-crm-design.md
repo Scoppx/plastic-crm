@@ -27,7 +27,6 @@ type Treatment = {
   id: string;
   name: string;            // "Botox", "Filler labbra", "Rinoplastica"
   recallDays: number | null; // intervallo richiamo; null = nessun richiamo specifico
-  price: number;           // prezzo indicativo €, usato per il valore recuperabile
 };
 
 type Patient = {
@@ -48,7 +47,6 @@ type Visit = {
   patientId: string;
   treatmentId: string;
   date: string;            // ISO date
-  price: number;           // prezzo effettivo pagato
   notes: string;
 };
 
@@ -117,19 +115,18 @@ type Recall = {
   dueDate: string;
   daysOverdue: number;           // negativo se ancora "due"
   status: 'overdue' | 'due';
-  estimatedValue: number;        // treatment.price, oppure prezzo ultima visita se fallback
 };
 ```
 
 Ordinamento: `overdue` prima di `due`; a parità, `daysOverdue` decrescente; poi
-`estimatedValue` decrescente.
+cognome e nome del paziente (`localeCompare`).
 
 ## 5. Viste
 
 ### 5.1 Dashboard richiami (home, `#/`)
 
-- KPI: pazienti dormienti (overdue), in scadenza (due), valore recuperabile stimato (€, somma `estimatedValue`).
-- Tabella `Recall[]` ordinata: nome, trattamento, ultima visita, giorni di ritardo, valore, pulsante "Contatta".
+- KPI: pazienti dormienti (overdue), in scadenza (due), contattati negli ultimi 30 giorni (senza rimandi).
+- Tabella `Recall[]` ordinata: nome, trattamento, ultima visita, giorni di ritardo, pulsante "Contatta".
 - Filtri: stato, trattamento, tag. Ricerca per nome.
 
 ### 5.2 Drawer contatto
@@ -156,7 +153,7 @@ Pulsante "Nuovo paziente".
 - Anagrafica modificabile inline, tag (aggiungi/rimuovi), toggle "Non contattare", note.
 - Prossimo richiamo calcolato con la stessa regola (anche se oltre la finestra).
 - Timeline visite in ordine cronologico inverso. Form "Aggiungi visita":
-  trattamento, data (default oggi), prezzo (default prezzo listino), note.
+  trattamento, data (default oggi), note.
 - Storico contatti (data, canale, eventuale snooze).
 - Elimina paziente (con conferma).
 
@@ -168,14 +165,14 @@ Funzione pura `computeStats(state, today)`:
 - Richiami generati per mese, ultimi 6 mesi (grafico a barre).
 - Tasso di recupero: contatti (senza snooze) seguiti da una visita dello stesso
   paziente entro 60 giorni / contatti totali.
-- Valore recuperabile per trattamento (barre orizzontali).
+- Dormienti e in scadenza per trattamento (barre orizzontali, conteggio pazienti).
 
 Grafici con Recharts. Colori da palette neutra, leggibili in chiaro e scuro.
 
 ### 5.6 Impostazioni (`#/settings`)
 
 - Nome clinica.
-- Catalogo trattamenti: tabella modificabile (nome, giorni richiamo o vuoto, prezzo), aggiungi/elimina.
+- Catalogo trattamenti: tabella modificabile (nome, giorni richiamo o vuoto), aggiungi/elimina.
   Un trattamento con visite associate non si può eliminare.
 - Soglia globale, finestra richiamo, giorni di snooze.
 - Template WhatsApp ed email, con legenda placeholder.
@@ -187,9 +184,9 @@ Grafici con Recharts. Colori da palette neutra, leggibili in chiaro e scuro.
 
 `seed.ts` genera lo stato iniziale in modo deterministico (PRNG con seme fisso):
 
-- 8 trattamenti: Botox (120gg, 350€), Filler labbra (270gg, 450€), Filler zigomi
-  (365gg, 600€), Biorivitalizzazione (180gg, 250€), Peeling (90gg, 150€),
-  Rinoplastica (null, 6500€), Mastoplastica (null, 7500€), Blefaroplastica (null, 4000€).
+- 8 trattamenti: Botox (120gg), Filler labbra (270gg), Filler zigomi (365gg),
+  Biorivitalizzazione (180gg), Peeling (90gg), Rinoplastica (null),
+  Mastoplastica (null), Blefaroplastica (null).
 - ~40 pazienti con nomi italiani, telefoni +39 finti, email finte.
 - 1-6 visite ciascuno distribuite negli ultimi 24 mesi, in modo che al momento del
   seed circa 10-12 siano overdue, 4-6 due, il resto ok.

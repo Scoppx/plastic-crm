@@ -41,14 +41,26 @@ describe('computeStats', () => {
     expect(computeStats(state(), TODAY).recoveryRate).toBeNull();
   });
 
-  it('value by treatment from current recalls', () => {
+  it('recalls by treatment from current recalls', () => {
     const s = state({
       patients: [patient('a'), patient('b'), patient('c')],
       visits: [visit('a', BOTOX.id, '2026-01-01'), visit('b', BOTOX.id, '2026-01-01'), visit('c', FILLER.id, '2025-10-01')],
     });
-    expect(computeStats(s, TODAY).valueByTreatment).toEqual([
-      { name: 'Botox', value: 700 },
-      { name: 'Filler labbra', value: 450 },
+    expect(computeStats(s, TODAY).recallsByTreatment).toEqual([
+      { name: 'Botox', count: 2 },
+      { name: 'Filler labbra', count: 1 },
     ]);
+  });
+
+  it('contactedLast30Days counts real contacts in the last 30 days, excludes older and snoozed', () => {
+    const s = state({
+      patients: [patient('recent'), patient('old'), patient('snz')],
+      contacts: [
+        contact('recent', '2026-09-01'), // 10 days ago
+        contact('old', '2026-08-02'), // 40 days ago
+        contact('snz', '2026-09-01', '2026-10-01'), // snoozed
+      ],
+    });
+    expect(computeStats(s, TODAY).contactedLast30Days).toBe(1);
   });
 });

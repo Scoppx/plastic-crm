@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useApp, useToday } from '../store/AppContext';
 import { computeRecalls } from '../domain/recalls';
+import { computeStats } from '../domain/stats';
 import type { Recall, RecallStatus } from '../domain/types';
 import KpiCard from '../components/KpiCard';
-import RecallTable, { eur } from '../components/RecallTable';
+import RecallTable from '../components/RecallTable';
 import ContactDrawer from '../components/ContactDrawer';
 
 export default function Dashboard() {
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [selected, setSelected] = useState<Recall | null>(null);
 
   const recalls = useMemo(() => computeRecalls(state, today), [state, today]);
+  const stats = useMemo(() => computeStats(state, today), [state, today]);
   const allTags = useMemo(() => [...new Set(state.patients.flatMap((p) => p.tags))].sort(), [state.patients]);
 
   const filtered = recalls.filter((r) => {
@@ -28,7 +30,6 @@ export default function Dashboard() {
 
   const overdue = recalls.filter((r) => r.status === 'overdue');
   const due = recalls.filter((r) => r.status === 'due');
-  const value = recalls.reduce((s, r) => s + r.estimatedValue, 0);
 
   return (
     <div className="space-y-6">
@@ -36,7 +37,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard label="Dormienti" value={overdue.length} hint="oltre la scadenza" />
         <KpiCard label="In scadenza" value={due.length} hint={`entro ${state.settings.recallWindowDays} giorni`} />
-        <KpiCard label="Valore recuperabile" value={eur(value)} hint="stima sui prezzi di listino" />
+        <KpiCard label="Contattati (30 gg)" value={stats.contactedLast30Days} hint="senza rimandi" />
       </div>
       <div className="flex flex-wrap gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca nome" className="rounded border px-2 py-1 text-sm" />

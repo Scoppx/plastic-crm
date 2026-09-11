@@ -1,9 +1,9 @@
 import type { AppState, Patient, Visit, ContactAttempt, Treatment } from '../src/domain/types';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION } from '../src/domain/types';
 
-export const BOTOX: Treatment = { id: 't-botox', name: 'Botox', recallDays: 120, price: 350 };
-export const FILLER: Treatment = { id: 't-filler', name: 'Filler labbra', recallDays: 270, price: 450 };
-export const RINO: Treatment = { id: 't-rino', name: 'Rinoplastica', recallDays: null, price: 6500 };
+export const BOTOX: Treatment = { id: 't-botox', name: 'Botox', recallDays: 120 };
+export const FILLER: Treatment = { id: 't-filler', name: 'Filler labbra', recallDays: 270 };
+export const RINO: Treatment = { id: 't-rino', name: 'Rinoplastica', recallDays: null };
 
 export function patient(id: string, overrides: Partial<Patient> = {}): Patient {
   return {
@@ -21,8 +21,8 @@ export function patient(id: string, overrides: Partial<Patient> = {}): Patient {
   };
 }
 
-export function visit(patientId: string, treatmentId: string, date: string, price = 100): Visit {
-  return { id: `v-${patientId}-${treatmentId}-${date}`, patientId, treatmentId, date, price, notes: '' };
+export function visit(patientId: string, treatmentId: string, date: string): Visit {
+  return { id: `v-${patientId}-${treatmentId}-${date}`, patientId, treatmentId, date, notes: '' };
 }
 
 export function contact(patientId: string, date: string, snoozeUntil?: string): ContactAttempt {

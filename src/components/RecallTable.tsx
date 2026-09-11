@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom';
 import type { Recall } from '../domain/types';
 import { formatIT } from '../domain/dates';
 
-export const eur = (n: number) => n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-
 export default function RecallTable({ recalls, onContact }: { recalls: Recall[]; onContact: (r: Recall) => void }) {
   if (recalls.length === 0) return <p className="text-slate-500">Nessun paziente da ricontattare.</p>;
   return (
@@ -16,7 +14,6 @@ export default function RecallTable({ recalls, onContact }: { recalls: Recall[];
             <th className="px-3 py-2">Ultima visita</th>
             <th className="px-3 py-2">Scadenza</th>
             <th className="px-3 py-2">Ritardo</th>
-            <th className="px-3 py-2 text-right">Valore</th>
             <th className="px-3 py-2"></th>
           </tr>
         </thead>
@@ -41,7 +38,6 @@ export default function RecallTable({ recalls, onContact }: { recalls: Recall[];
                   <span className="rounded bg-amber-100 px-2 py-0.5 text-amber-800">tra {-r.daysOverdue} gg</span>
                 )}
               </td>
-              <td className="px-3 py-2 text-right">{eur(r.estimatedValue)}</td>
               <td className="px-3 py-2 text-right">
                 <button onClick={() => onContact(r)} className="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">
                   Contatta
