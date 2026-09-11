@@ -15,6 +15,12 @@ export default function Settings() {
   const num = (v: string) => (v === '' ? null : Number(v));
   const usedTreatment = (id: string) => state.visits.some((v) => v.treatmentId === id);
 
+  const setDays = (key: 'globalDormantDays' | 'recallWindowDays' | 'snoozeDays') => (e: ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value);
+    if (e.target.value === '' || !Number.isFinite(v) || v < 0) return;
+    dispatch({ type: 'UPDATE_SETTINGS', changes: { [key]: v } });
+  };
+
   function onImport(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -51,13 +57,13 @@ export default function Settings() {
         </label>
         <div className="grid grid-cols-3 gap-3 text-sm">
           <label>Soglia dormienza (gg)
-            <input type="number" value={s.globalDormantDays} onChange={(e) => dispatch({ type: 'UPDATE_SETTINGS', changes: { globalDormantDays: Number(e.target.value) } })} className={field} />
+            <input type="number" value={s.globalDormantDays} onChange={setDays('globalDormantDays')} className={field} />
           </label>
           <label>Finestra richiamo (gg)
-            <input type="number" value={s.recallWindowDays} onChange={(e) => dispatch({ type: 'UPDATE_SETTINGS', changes: { recallWindowDays: Number(e.target.value) } })} className={field} />
+            <input type="number" value={s.recallWindowDays} onChange={setDays('recallWindowDays')} className={field} />
           </label>
           <label>Rimanda di (gg)
-            <input type="number" value={s.snoozeDays} onChange={(e) => dispatch({ type: 'UPDATE_SETTINGS', changes: { snoozeDays: Number(e.target.value) } })} className={field} />
+            <input type="number" value={s.snoozeDays} onChange={setDays('snoozeDays')} className={field} />
           </label>
         </div>
       </section>
