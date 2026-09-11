@@ -19,12 +19,24 @@ function isAppState(x: unknown): x is AppState {
   );
 }
 
+function readRaw(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function saveState(state: AppState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    /* storage unavailable: run in memory */
+  }
 }
 
 export function loadState(today: string): { state: AppState; resetReason: ResetReason } {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = readRaw();
   let reason: ResetReason = null;
   if (raw === null) {
     reason = 'missing';
