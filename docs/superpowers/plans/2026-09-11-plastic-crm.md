@@ -572,54 +572,19 @@ describe('computeRecalls', () => {
     expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['old']);
   });
 
-  it('orders overdue first, then daysOverdue desc, then value desc', () => {
+  it('orders overdue first, then daysOverdue desc', () => {
     const s = state({
-      patients: [patient('d1'), patient('o-small'), patient('o-big'), patient('o-older')],
+      patients: [patient('d1'), patient('o43'), patient('o42'), patient('o-older')],
       visits: [
-        visit('d1', BOTOX.id, '2026-05-20'),
-        visit('o-small', BOTOX.id, '2026-04-01'),
-        visit('o-big', FILLER.id, '2025-11-03'), // due 2026-07-31 → 42 days? no: 2025-11-03+270=2026-07-31 → 42
-        visit('o-older', BOTOX.id, '2026-03-01'),
+        visit('d1', BOTOX.id, '2026-05-20'),      // due 2026-09-17 → due
+        visit('o43', BOTOX.id, '2026-04-01'),     // due 2026-07-30 → 43 days overdue
+        visit('o42', FILLER.id, '2025-11-03'),    // due 2026-07-31 → 42 days overdue
+        visit('o-older', BOTOX.id, '2026-03-01'), // due 2026-06-29 → 74 days overdue
       ],
     });
-    const ids = computeRecalls(s, TODAY).map((x) => x.patient.id);
-    expect(ids[0]).toBe('o-older');
-    expect(ids[ids.length - 1]).toBe('d1');
-    expect(ids.indexOf('o-big')).toBeLessThan(ids.indexOf('o-small')); // same-ish days? verify: o-small 43 days, o-big 42 days
+    expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['o-older', 'o43', 'o42', 'd1']);
   });
-});
-```
 
-Note for the last test: `o-small` is overdue 43 days, `o-big` 42 days, so `o-small` comes before `o-big` by days. Fix the assertion to match the rule: replace the last `expect` with
-
-```ts
-    expect(ids).toEqual(['o-older', 'o-small', 'o-big', 'd1']);
-```
-
-and add a tie test:
-
-```ts
-  it('breaks ties on estimatedValue desc', () => {
-    const s = state({
-      patients: [patient('cheap'), patient('rich')],
-      visits: [visit('cheap', BOTOX.id, '2026-04-01'), visit('rich', BOTOX.id, '2026-04-01')],
-      treatments: [BOTOX],
-    });
-    s.visits[1] = { ...s.visits[1], price: 999 };
-    // both same treatment → same estimatedValue (treatment.price). Use fallback path for tie instead:
-    const s2 = state({
-      treatments: [RINO],
-      patients: [patient('cheap'), patient('rich')],
-      visits: [visit('cheap', RINO.id, '2026-01-10', 100), visit('rich', RINO.id, '2026-01-10', 9000)],
-    });
-    expect(computeRecalls(s2, TODAY).map((x) => x.patient.id)).toEqual(['rich', 'cheap']);
-    void s;
-  });
-```
-
-Simplify: drop the `s` part and keep only `s2`. Final version of that test:
-
-```ts
   it('breaks ties on estimatedValue desc', () => {
     const s = state({
       treatments: [RINO],
@@ -628,6 +593,7 @@ Simplify: drop the `s` part and keep only `s2`. Final version of that test:
     });
     expect(computeRecalls(s, TODAY).map((x) => x.patient.id)).toEqual(['rich', 'cheap']);
   });
+});
 ```
 
 Run: `npm test`
@@ -812,7 +778,7 @@ Run: `npm test` → FAIL, module not found.
 ```ts
 import type { AppState } from './types';
 import { computeDueDate, computeRecalls } from './recalls';
-import { addDaysISO, daysBetween, monthKey } from './dates';
+import { addDaysISO, monthKey } from './dates';
 
 export type Stats = {
   totalPatients: number;
@@ -876,11 +842,7 @@ export function computeStats(state: AppState, today: string): Stats {
       .sort((a, b) => b.value - a.value),
   };
 }
-
-void daysBetween;
 ```
-
-Remove the trailing `void daysBetween;` line and the `daysBetween` import — they are not needed.
 
 - [ ] **Step 3: Run tests, commit**
 
