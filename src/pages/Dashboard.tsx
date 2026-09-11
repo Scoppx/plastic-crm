@@ -4,6 +4,7 @@ import { computeRecalls } from '../domain/recalls';
 import type { Recall, RecallStatus } from '../domain/types';
 import KpiCard from '../components/KpiCard';
 import RecallTable, { eur } from '../components/RecallTable';
+import ContactDrawer from '../components/ContactDrawer';
 
 export default function Dashboard() {
   const { state } = useApp();
@@ -55,7 +56,7 @@ export default function Dashboard() {
         </select>
       </div>
       <RecallTable recalls={filtered} onContact={setSelected} />
-      {selected && <pre className="text-xs">{selected.patient.id}</pre>}
+      {selected && <ContactDrawer recall={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
