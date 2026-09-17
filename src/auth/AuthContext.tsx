@@ -22,7 +22,10 @@ function translate(message: string): string {
   if (/invalid login credentials/i.test(message)) return 'Email o password errati';
   if (/rate limit/i.test(message)) return 'Troppi tentativi, riprova tra qualche minuto';
   if (/password should be at least/i.test(message)) return 'La password deve avere almeno 6 caratteri';
-  return message;
+  if (/email not confirmed/i.test(message)) return 'Email non confermata';
+  if (/new password should be different/i.test(message)) return 'La nuova password deve essere diversa da quella attuale';
+  if (/auth session missing/i.test(message)) return 'Sessione scaduta, apri di nuovo il link';
+  return 'Operazione non riuscita, riprova';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

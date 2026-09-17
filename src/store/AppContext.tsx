@@ -25,7 +25,13 @@ export function AppProvider({ repository, children }: { repository: Repository; 
   const stateRef = useRef<AppState | null>(null);
   const queue = useRef<Pending[]>([]);
   const pumping = useRef(false);
+  const disposed = useRef(false);
   const toast = useToast();
+
+  useEffect(() => {
+    disposed.current = false;
+    return () => { disposed.current = true; };
+  }, []);
 
   const setState = useCallback((s: AppState) => {
     stateRef.current = s;
@@ -51,6 +57,7 @@ export function AppProvider({ repository, children }: { repository: Repository; 
     if (pumping.current) return;
     pumping.current = true;
     while (queue.current.length > 0) {
+      if (disposed.current) break;
       const item = queue.current[0];
       try {
         await persist(repository, item.action);
@@ -58,7 +65,7 @@ export function AppProvider({ repository, children }: { repository: Repository; 
       } catch (err) {
         queue.current = [];
         setState(item.snapshot);
-        toast.show((err as Error).message || 'Salvataggio fallito, riprova');
+        if (!disposed.current) toast.show((err as Error).message || 'Salvataggio fallito, riprova');
       }
     }
     pumping.current = false;

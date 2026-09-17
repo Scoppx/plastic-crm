@@ -8,11 +8,15 @@ export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (busy) return;
     if (password !== confirm) { setError('Le password non coincidono'); return; }
+    setBusy(true); setError('');
     const err = await auth.updatePassword(password);
+    setBusy(false);
     if (err) setError(err); else navigate('/', { replace: true });
   }
 
@@ -21,7 +25,7 @@ export default function ResetPassword() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-white p-6">
         <h1 className="text-xl font-semibold">Nuova password</h1>
-        {auth.status !== 'signedIn' && <p className="text-sm text-slate-500">Apri questa pagina dal link ricevuto via email.</p>}
+        {auth.status === 'signedOut' && <p className="text-sm text-slate-500">Apri questa pagina dal link ricevuto via email.</p>}
         <label className="block text-sm">Password
           <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} required minLength={6} />
         </label>
@@ -29,7 +33,7 @@ export default function ResetPassword() {
           <input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={field} required minLength={6} />
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button type="submit" disabled={auth.status !== 'signedIn'} className="w-full rounded bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Salva</button>
+        <button type="submit" disabled={auth.status !== 'signedIn' || busy} className="w-full rounded bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Salva</button>
       </form>
     </div>
   );

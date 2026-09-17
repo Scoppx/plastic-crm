@@ -21,9 +21,11 @@ export default function Login() {
   }
 
   async function onForgot() {
+    if (busy) return;
     if (!email) { setError('Inserisci la tua email, poi premi di nuovo'); return; }
-    setError(''); setInfo('');
+    setBusy(true); setError(''); setInfo('');
     const err = await auth.resetPassword(email);
+    setBusy(false);
     if (err) setError(err); else setInfo('Email inviata: controlla la posta per reimpostare la password');
   }
 
@@ -43,7 +45,7 @@ export default function Login() {
         <button type="submit" disabled={busy} className="w-full rounded bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {busy ? 'Accesso…' : 'Entra'}
         </button>
-        <button type="button" onClick={onForgot} className="w-full text-xs text-slate-500 hover:text-slate-800">Password dimenticata</button>
+        <button type="button" onClick={onForgot} disabled={busy} className="w-full text-xs text-slate-500 hover:text-slate-800 disabled:opacity-50">Password dimenticata</button>
       </form>
     </div>
   );
