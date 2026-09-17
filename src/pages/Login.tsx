@@ -11,6 +11,9 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   if (auth.status === 'signedIn') return <Navigate to="/" replace />;
+  if (auth.status === 'loading') {
+    return <div className="flex min-h-screen items-center justify-center text-slate-500">Caricamento…</div>;
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

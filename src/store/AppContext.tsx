@@ -17,6 +17,25 @@ export function realToday(): string {
 type Status = 'loading' | 'ready' | 'error';
 type Pending = { action: Action; snapshot: AppState };
 
+/** L'ultimo elemento della coda è in volo solo se è anche il primo e la pompa sta girando. */
+function inFlight(queue: Pending[], pumping: boolean): boolean {
+  return queue.length === 1 && pumping;
+}
+
+/** Due modifiche consecutive allo stesso record (tastiera) si accorpano in un'unica azione. */
+function merge(last: Action, next: Action): Action | null {
+  if (last.type === 'UPDATE_SETTINGS' && next.type === 'UPDATE_SETTINGS') {
+    return { type: last.type, changes: { ...last.changes, ...next.changes } };
+  }
+  if (last.type === 'UPDATE_PATIENT' && next.type === 'UPDATE_PATIENT' && last.id === next.id) {
+    return { type: last.type, id: last.id, changes: { ...last.changes, ...next.changes } };
+  }
+  if (last.type === 'UPDATE_TREATMENT' && next.type === 'UPDATE_TREATMENT' && last.id === next.id) {
+    return { type: last.type, id: last.id, changes: { ...last.changes, ...next.changes } };
+  }
+  return null;
+}
+
 export function AppProvider({ repository, children }: { repository: Repository; children: ReactNode }) {
   const [status, setStatus] = useState<Status>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -71,13 +90,29 @@ export function AppProvider({ repository, children }: { repository: Repository; 
     pumping.current = false;
   }, [repository, setState, toast]);
 
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (queue.current.length === 0) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
+
   const dispatch = useCallback((action: Action) => {
     const current = stateRef.current;
     if (!current) return;
     const next = reducer(current, action);
     if (next === current) return;
     setState(next);
-    queue.current.push({ action, snapshot: current });
+    const last = queue.current.at(-1);
+    const merged = last && !inFlight(queue.current, pumping.current) ? merge(last.action, action) : null;
+    if (last && merged) {
+      last.action = merged; // lo snapshot resta quello precedente alla prima modifica accorpata
+    } else {
+      queue.current.push({ action, snapshot: current });
+    }
     void pump();
   }, [pump, setState]);
 

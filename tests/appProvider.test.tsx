@@ -102,6 +102,94 @@ describe('AppProvider', () => {
     expect(repo.updatePatient).not.toHaveBeenCalled();
   });
 
+  it('coalesces consecutive keystroke updates while the first is in flight', async () => {
+    const d: Deferred[] = [];
+    const pending = () => new Promise<void>((resolve, reject) => d.push({ resolve, reject }));
+    const repo = repoWith({ updateSettings: vi.fn(() => pending()) });
+    mount(repo);
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'));
+
+    act(() => {
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'A' } }); // in volo
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'B' } });
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'C' } });
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { snoozeDays: 7 } });
+    });
+    expect(captured!.state.settings).toMatchObject({ clinicName: 'C', snoozeDays: 7 });
+    expect(repo.updateSettings).toHaveBeenCalledTimes(1);
+    await act(async () => { d[0].resolve(); });
+    await waitFor(() => expect(repo.updateSettings).toHaveBeenCalledTimes(2));
+    expect(repo.updateSettings).toHaveBeenLastCalledWith({ clinicName: 'C', snoozeDays: 7 });
+    await act(async () => { d[1].resolve(); });
+    expect(repo.updateSettings).toHaveBeenCalledTimes(2);
+  });
+
+  it('rolls back a merged item to the snapshot taken before its first keystroke', async () => {
+    const d: Deferred[] = [];
+    const pending = () => new Promise<void>((resolve, reject) => d.push({ resolve, reject }));
+    const repo = repoWith({ updateSettings: vi.fn(() => pending()) });
+    mount(repo);
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'));
+
+    act(() => {
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'A' } });
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'B' } });
+      captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'C' } });
+    });
+    await act(async () => { d[0].resolve(); });
+    await waitFor(() => expect(repo.updateSettings).toHaveBeenCalledTimes(2));
+    await act(async () => { d[1].reject(new Error('Salvataggio fallito')); });
+    await waitFor(() => expect(captured!.state.settings.clinicName).toBe('A'));
+    expect(screen.getByText('Salvataggio fallito')).toBeTruthy();
+  });
+
+  it('does not merge updates of different patients', async () => {
+    const d: Deferred[] = [];
+    const pending = () => new Promise<void>((resolve, reject) => d.push({ resolve, reject }));
+    const repo = repoWith({
+      addPatient: vi.fn(() => pending()),
+      updatePatient: vi.fn(() => pending()),
+    });
+    mount(repo);
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'));
+
+    act(() => {
+      captured!.dispatch({ type: 'ADD_PATIENT', patient: patient('a') });
+      captured!.dispatch({ type: 'ADD_PATIENT', patient: patient('b') });
+      captured!.dispatch({ type: 'UPDATE_PATIENT', id: 'a', changes: { notes: 'na' } });
+      captured!.dispatch({ type: 'UPDATE_PATIENT', id: 'b', changes: { notes: 'nb' } });
+    });
+    for (let i = 0; i < 4; i++) {
+      await waitFor(() => expect(d.length).toBe(i + 1));
+      await act(async () => { d[i].resolve(); });
+    }
+    expect(repo.updatePatient).toHaveBeenCalledTimes(2);
+    expect(repo.updatePatient).toHaveBeenNthCalledWith(1, 'a', { notes: 'na' });
+    expect(repo.updatePatient).toHaveBeenNthCalledWith(2, 'b', { notes: 'nb' });
+  });
+
+  it('warns before unload only while writes are pending', async () => {
+    const d: Deferred[] = [];
+    const pending = () => new Promise<void>((resolve, reject) => d.push({ resolve, reject }));
+    const repo = repoWith({ updateSettings: vi.fn(() => pending()) });
+    const { unmount } = mount(repo);
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'));
+
+    const fire = () => {
+      const e = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+    expect(fire()).toBe(false);
+    act(() => { captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'A' } }); });
+    expect(fire()).toBe(true);
+    await act(async () => { d[0].resolve(); });
+    expect(fire()).toBe(false);
+    unmount();
+    act(() => { captured!.dispatch({ type: 'UPDATE_SETTINGS', changes: { clinicName: 'B' } }); });
+    expect(fire()).toBe(false);
+  });
+
   it('ignores actions that do not change state', async () => {
     const repo = repoWith();
     mount(repo);
