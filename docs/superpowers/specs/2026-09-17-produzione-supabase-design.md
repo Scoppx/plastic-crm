@@ -99,8 +99,8 @@ locale del backend `local`.
 Indici: `(owner_id)` su ogni tabella; `visits(patient_id)`; `contacts(patient_id)`;
 `treatments(owner_id, sort)`.
 
-Row Level Security attiva su tutte le tabelle, una policy per comando
-(select/insert/update/delete), tutte con:
+Row Level Security attiva su tutte le tabelle, una policy `for all`
+(select/insert/update/delete) per tabella con:
 
 ```sql
 using (owner_id = auth.uid()) with check (owner_id = auth.uid())
@@ -139,7 +139,7 @@ in demo, ora garantito dal DB).
 
 ```ts
 export interface Repository {
-  loadAll(): Promise<AppState>;
+  loadAll(): Promise<{ state: AppState; resetReason: ResetReason }>; // resetReason serve al banner demo, null su Supabase
   addPatient(p: Patient): Promise<void>;
   updatePatient(id: string, changes: Partial<Patient>): Promise<void>;
   deletePatient(id: string): Promise<void>;
