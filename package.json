@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "predeploy": "npm run build",
+    "predeploy": "VITE_BASE_PATH=/plastic-crm/ VITE_DATA_BACKEND=local npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {

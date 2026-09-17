@@ -11,6 +11,13 @@ Demo di un CRM per studi di chirurgia plastica ed estetica, focalizzato sul rich
     npm run dev
     npm test
 
-## Deploy
+## Ambienti
 
-    npm run deploy
+| | Demo | Produzione |
+|---|---|---|
+| Backend | `VITE_DATA_BACKEND=local` (localStorage, seed) | `VITE_DATA_BACKEND=supabase` |
+| Hosting | GitHub Pages, `npm run deploy` | Cloudflare Pages, build automatica da `main` |
+
+Variabili in `.env.example`. Per sviluppare contro Supabase copia `.env.example` in `.env.local` e compila URL e anon key.
+
+Schema DB in `supabase/migrations`, applicato con `supabase db push`. Checklist di rilascio in `docs/CHECKLIST-PROD.md`.
