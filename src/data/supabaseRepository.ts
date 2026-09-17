@@ -11,6 +11,11 @@ type PgError = { code?: string; message: string } | null;
 
 function check(error: PgError): void {
   if (!error) return;
+  throw new Error(error.message);
+}
+
+function checkDeleteTreatment(error: PgError): void {
+  if (!error) return;
   if (error.code === '23503') throw new Error('Trattamento in uso, non eliminabile');
   throw new Error(error.message);
 }
@@ -52,7 +57,7 @@ export function createSupabaseRepository(client: SupabaseClient, ownerId: string
     async addContact(c) { check((await client.from('contacts').insert(contactToRow(c))).error); },
     async addTreatment(t) { check((await client.from('treatments').insert(treatmentToRow(t))).error); },
     async updateTreatment(id, changes) { check((await client.from('treatments').update(treatmentToRow(changes)).eq('id', id)).error); },
-    async deleteTreatment(id) { check((await client.from('treatments').delete().eq('id', id)).error); },
+    async deleteTreatment(id) { checkDeleteTreatment((await client.from('treatments').delete().eq('id', id)).error); },
     async updateSettings(changes) { check((await client.from('settings').update(settingsToRow(changes)).eq('owner_id', ownerId)).error); },
   };
 }

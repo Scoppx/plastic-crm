@@ -62,6 +62,11 @@ describe('supabaseRepository', () => {
     await expect(createSupabaseRepository(client, OWNER).deleteTreatment('t')).rejects.toThrow('Trattamento in uso, non eliminabile');
   });
 
+  it('does not remap 23503 on addVisit', async () => {
+    const { client } = fakeSupabase({ visits: { data: null, error: { code: '23503', message: 'fk' } } });
+    await expect(createSupabaseRepository(client, OWNER).addVisit(visit('a', 't', '2026-01-01'))).rejects.toThrow('fk');
+  });
+
   it('has no replaceState', () => {
     const { client } = fakeSupabase();
     expect(createSupabaseRepository(client, OWNER).replaceState).toBeUndefined();

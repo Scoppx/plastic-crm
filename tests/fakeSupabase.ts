@@ -18,6 +18,7 @@ export function fakeSupabase(results: Record<string, Result | (() => Result)> = 
       eq: (col: string, val: unknown) => { call.filters.push([col, 'eq', val]); return q; },
       order: () => q,
       single: () => q,
+      // oxlint-disable-next-line unicorn/no-thenable -- fake must be awaitable like real postgrest-js query builders
       then: (resolve: (r: Result) => void) => {
         const r = results[table];
         resolve(typeof r === 'function' ? r() : r ?? { data: [], error: null });
