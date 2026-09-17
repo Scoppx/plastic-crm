@@ -1,6 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import DemoBanner from './DemoBanner';
 import { useApp } from '../store/AppContext';
+import { useAuth } from '../auth/AuthContext';
+import { isDemo } from '../data';
 
 const links = [
   { to: '/', label: 'Richiami' },
@@ -11,9 +13,10 @@ const links = [
 
 export default function Layout() {
   const { state } = useApp();
+  const auth = useAuth();
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <DemoBanner />
+      {isDemo && <DemoBanner />}
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
           <span className="text-lg font-bold">{state.settings.clinicName}</span>
@@ -31,6 +34,9 @@ export default function Layout() {
               </NavLink>
             ))}
           </nav>
+          {!isDemo && (
+            <button onClick={() => auth.signOut()} className="ml-auto text-sm text-slate-500 hover:text-slate-900">Esci</button>
+          )}
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">

@@ -4,10 +4,24 @@ import { createSeed } from '../data/seed';
 import { exportJSON, parseImport } from '../data/storage';
 import { newId } from '../store/actions';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { isDemo } from '../data';
+import { useAuth } from '../auth/AuthContext';
 
 export default function Settings() {
   const { state, dispatch } = useApp();
   const s = state.settings;
+  const auth = useAuth();
+  const [pwd, setPwd] = useState({ next: '', confirm: '' });
+  const [pwdMsg, setPwdMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function changePassword() {
+    if (pwd.next.length < 6) { setPwdMsg({ ok: false, text: 'Almeno 6 caratteri' }); return; }
+    if (pwd.next !== pwd.confirm) { setPwdMsg({ ok: false, text: 'Le password non coincidono' }); return; }
+    const err = await auth.updatePassword(pwd.next);
+    setPwdMsg(err ? { ok: false, text: err } : { ok: true, text: 'Password aggiornata' });
+    if (!err) setPwd({ next: '', confirm: '' });
+  }
+
   const [confirmReset, setConfirmReset] = useState(false);
   const [importError, setImportError] = useState('');
   const [newT, setNewT] = useState({ name: '', recallDays: '' });
@@ -122,23 +136,46 @@ export default function Settings() {
       </section>
 
       <section className="space-y-3 rounded-lg border bg-white p-4">
-        <h2 className="font-semibold">Demo</h2>
-        <label className="block text-sm">Simula data odierna
-          <div className="flex gap-2">
-            <input type="date" value={s.simulatedToday ?? ''} onChange={(e) => dispatch({ type: 'UPDATE_SETTINGS', changes: { simulatedToday: e.target.value || undefined } })} className={field} />
-            <button onClick={() => dispatch({ type: 'UPDATE_SETTINGS', changes: { simulatedToday: undefined } })} className="rounded border px-3 py-1 text-sm">Azzera</button>
-          </div>
-        </label>
+        <h2 className="font-semibold">{isDemo ? 'Demo' : 'Dati'}</h2>
+        {isDemo && (
+          <label className="block text-sm">Simula data odierna
+            <div className="flex gap-2">
+              <input type="date" value={s.simulatedToday ?? ''} onChange={(e) => dispatch({ type: 'UPDATE_SETTINGS', changes: { simulatedToday: e.target.value || undefined } })} className={field} />
+              <button onClick={() => dispatch({ type: 'UPDATE_SETTINGS', changes: { simulatedToday: undefined } })} className="rounded border px-3 py-1 text-sm">Azzera</button>
+            </div>
+          </label>
+        )}
         <div className="flex flex-wrap gap-2 text-sm">
           <button onClick={download} className="rounded border px-3 py-1">Esporta JSON</button>
-          <label className="cursor-pointer rounded border px-3 py-1">
-            Importa JSON
-            <input type="file" accept="application/json" onChange={onImport} className="hidden" />
-          </label>
-          <button onClick={() => setConfirmReset(true)} className="rounded border border-red-300 px-3 py-1 text-red-700">Reset dati demo</button>
+          {isDemo && (
+            <>
+              <label className="cursor-pointer rounded border px-3 py-1">
+                Importa JSON
+                <input type="file" accept="application/json" onChange={onImport} className="hidden" />
+              </label>
+              <button onClick={() => setConfirmReset(true)} className="rounded border border-red-300 px-3 py-1 text-red-700">Reset dati demo</button>
+            </>
+          )}
         </div>
         {importError && <p className="text-sm text-red-600">{importError}</p>}
       </section>
+
+      {!isDemo && (
+        <section className="space-y-3 rounded-lg border bg-white p-4">
+          <h2 className="font-semibold">Account</h2>
+          <p className="text-sm text-slate-600">{auth.status === 'signedIn' ? auth.email : ''}</p>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <label>Nuova password
+              <input type="password" autoComplete="new-password" value={pwd.next} onChange={(e) => setPwd({ ...pwd, next: e.target.value })} className={field} />
+            </label>
+            <label>Conferma
+              <input type="password" autoComplete="new-password" value={pwd.confirm} onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })} className={field} />
+            </label>
+          </div>
+          <button onClick={changePassword} className="rounded border px-3 py-1 text-sm">Cambia password</button>
+          {pwdMsg && <p className={`text-sm ${pwdMsg.ok ? 'text-green-700' : 'text-red-600'}`}>{pwdMsg.text}</p>}
+        </section>
+      )}
 
       {confirmReset && (
         <ConfirmDialog
