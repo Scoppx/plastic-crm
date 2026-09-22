@@ -7,7 +7,6 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
 
   if (auth.status === 'signedIn') return <Navigate to="/" replace />;
@@ -17,19 +16,10 @@ export default function Login() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setBusy(true); setError(''); setInfo('');
+    setBusy(true); setError('');
     const err = await auth.signIn(email, password);
     setBusy(false);
     if (err) setError(err);
-  }
-
-  async function onForgot() {
-    if (busy) return;
-    if (!email) { setError('Inserisci la tua email, poi premi di nuovo'); return; }
-    setBusy(true); setError(''); setInfo('');
-    const err = await auth.resetPassword(email);
-    setBusy(false);
-    if (err) setError(err); else setInfo('Email inviata: controlla la posta per reimpostare la password');
   }
 
   const field = 'w-full rounded border px-3 py-2 text-sm';
@@ -44,11 +34,10 @@ export default function Login() {
           <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} required />
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        {info && <p className="text-sm text-green-700">{info}</p>}
         <button type="submit" disabled={busy} className="w-full rounded bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {busy ? 'Accesso…' : 'Entra'}
         </button>
-        <button type="button" onClick={onForgot} disabled={busy} className="w-full text-xs text-slate-500 hover:text-slate-800 disabled:opacity-50">Password dimenticata</button>
+        <p className="text-center text-xs text-slate-500">Password dimenticata? Contatta l'amministratore</p>
       </form>
     </div>
   );
