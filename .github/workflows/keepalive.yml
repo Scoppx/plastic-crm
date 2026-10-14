@@ -8,13 +8,37 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    env:
+      URL: ${{ secrets.SUPABASE_URL }}
+      ANON: ${{ secrets.SUPABASE_ANON_KEY }}
+      EMAIL: ${{ secrets.KEEPALIVE_EMAIL }}
+      PASSWORD: ${{ secrets.KEEPALIVE_PASSWORD }}
     steps:
-      # una select anonima filtrata da RLS non conta come attività: ping() scrive una riga
+      # né una select anonima né ping() da anon sono bastati (avviso di pausa del 14/10):
+      # simuliamo un utente vero con un utente dedicato, che vede solo i propri dati via RLS
+      - name: Sign in
+        run: |
+          TOKEN=$(curl --fail --silent --show-error -X POST \
+            -H "apikey: $ANON" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg e "$EMAIL" --arg p "$PASSWORD" '{email: $e, password: $p}')" \
+            "$URL/auth/v1/token?grant_type=password" | jq -r .access_token)
+          [ -n "$TOKEN" ] && [ "$TOKEN" != null ]
+          echo "::add-mask::$TOKEN"
+          echo "TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Read own settings
+        run: |
+          curl --fail --silent --show-error \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $TOKEN" \
+            "$URL/rest/v1/settings?select=owner_id" | jq -e 'length == 1'
+
       - name: Call ping()
         run: |
           curl --fail --silent --show-error -X POST \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{}' \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/ping"
+            "$URL/rest/v1/rpc/ping"
